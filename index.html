@@ -1,0 +1,282 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+    <title>bind-mi</title>
+    <meta name="description" content="A miRNA Binding Site Prediction Tool">
+    <meta property="og:image" content="img/socimg.png" />
+    <link rel="icon" type="image/png" href="fav.png">
+    <link rel="stylesheet" type="text/css" href='style.css' />
+    <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython.js"></script>
+    <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython_stdlib.js"></script>
+</head>
+<body onload="brython()">
+    <header class="smooth-trans">
+        <h1 class="smooth-trans">bind-mi</h1>
+        <h3 class="smooth-trans">A miRNA Binding Site Prediction Tool</h3>
+    </header>
+    <div id="matches" class="smooth-trans"></div>
+    <script type="text/javascript" src="script.js"></script>
+    <script type="text/python3">
+        from browser import document, window
+        import sys
+
+        q = "TGAGGTAGTAGGTTGTATAGTT"
+        t = "CGCAGCACAAGCTCAGGACATGGAGGTGCCGGATGCAGGAAGGAGGTGCAGACGGAAGGAGGAGGCT"
+
+        t = t.strip()  # remove leading and trailing whitespace
+        t = t.upper()  # make upper case
+        t = t.replace('T', 'U')  # ensure RNA alphabet
+
+        # this is the miRNA
+        q = q.upper()  # make upper case
+        q = q.replace('T', 'U')  # ensure RNA alphabet
+        q = q[::-1]    # reverse
+
+        rnaMatch = {'A': 'U', 'C': 'G', 'G': 'CU', 'U': 'AG'}
+
+        rnaValues = {"match": 1.0,
+                    "targetGap": -0.5, "queryGap": -0.5,
+                    "mismatch": -1.0,
+                    "similar": 0.8,
+                    "seedRange": range(2, 8),  # nt 2-7 in query string should match
+                    "seedWeight": 1.5,
+                    "skipLength": 15,    # first n nts in target string should be skipped
+                    "centerRange": 0.5,    # middle (n*100)% of nts on target string will be penalized
+                    "penaltyWeight": 0.5}
+
+        def sw(query, target, scoreCount=10,
+            match=rnaMatch, scoreValue=rnaValues,
+            qcomment="<span class=\"blue\"><<< query</span>",
+            tcomment="<span class=\"blue\">>>> target</span>"):
+            """Smith-Waterman matcher.
+
+            Prints the scoreCount best matches based on the settings of the
+            matching function and the parameters that control the scoring.
+            """
+
+            # table has an extra row and column
+            height = len(query) + 1
+            width = len(target) + 1
+
+            # initialize the edges of the table.
+            # each table entry has a score, a match type, and a
+            table = {}
+            for row in range(0, height):
+                table[row, 0] = {"score": 0.0, "start": (row, 0), "type": "begin"}
+            for col in range(1, width):
+                table[0, col] = {"score": 0.0, "start": (0, col), "type": "begin"}
+
+            # grab parameters for later use
+            seedRange = scoreValue["seedRange"]
+            seedWeight = scoreValue["seedWeight"]
+            skipLength = scoreValue["skipLength"]
+            centerRange = scoreValue["centerRange"]
+            penaltyWeight = scoreValue["penaltyWeight"]
+
+            # fill out the Smith Waterman matrix with values
+            for row in range(1, height):
+                for col in range(1, width):
+
+                    # grab the query and target characters
+                    # strings start at 0, but bases count from 1
+                    qc = query[row - 1]
+                    tc = target[col - 1]
+
+                    # assume a match or similar extension
+                    newScore = {"score": table[row - 1, col - 1]["score"],
+                                "start": table[row - 1, col - 1]["start"]}
+
+                    # types of matching: strong/match, weak/similar, bad/mismatch
+                    if match[qc][0] == tc:
+                        newScore["type"] = "match"
+                    elif (tc in match[qc]):
+                        newScore["type"] = "similar"
+                    else:
+                        newScore["type"] = "mismatch"
+
+                    # "row" is the position of the base currently being matched
+                    # get rid of one of these two terms if you want (removed end seed region)
+                    in_seed = (row in seedRange)    # seed = nt 2-7 in query string
+
+                    # (mis)matching counted more heavily at beginning of query
+                    # aka. mismatches penalized more; matches rewarded more
+                    if in_seed:
+                        newScore["score"] += seedWeight * scoreValue[newScore["type"]]
+                    else:
+                        newScore["score"] += scoreValue[newScore["type"]]
+
+                    # two other ways these strings may be aligned:
+                    # current query character is dropped (a targetGap)
+                    # or the current target character is dropped (a queryGap)
+                    tgap_score = table[row - 1, col]["score"] + scoreValue["targetGap"]
+                    qgap_score = table[row, col - 1]["score"] + scoreValue["queryGap"]
+
+                    # check if dropping target is a better approach
+                    if tgap_score > newScore["score"]:
+                        newScore = {"score": tgap_score,
+                                    "type": "targetGap",
+                                    "start": table[row - 1, col]["start"]}
+
+                    # perhaps dropping a query character is better
+                    if qgap_score > newScore["score"]:
+                        newScore = {"score": qgap_score,
+                                    "type": "queryGap",
+                                    "start": table[row, col - 1]["start"]}
+
+                    # if the best score is not positive,
+                    # we terminate any matching here
+                    if newScore["score"] <= 0:
+                        newScore = {"score": 0,
+                                    "type": "begin",
+                                    "start": (row, col)}
+
+                    # write the entry in the table
+                    table[row, col] = newScore
+
+            # IF you have a score adjustment pass, put that here, making adjustments
+            # to table[row,col]["score"].
+            # aka. want to weight mismatch/match more heavily in another part of the UTR.
+
+            # find middle portion of target string for penalty adjustments
+            left_bound = (int)((centerRange / 2) * width)  # e.g., 25th percentile if centerRange = 50%
+            right_bound = (int)(width - left_bound)    # e.g., 75th percentile if centerRange = 50%
+
+            for row in range(1, height):
+                for col in range(1, width):
+                    # penalize score if we're in the skip region of target string (e.g., first 15 nts)
+                    # or near center of UTR (binding sites are more likely found at ends)
+                    if col <= skipLength or col in range(left_bound, right_bound):
+                        table[row, col]["score"] *= penaltyWeight
+
+            # Finally, compute the top scoreCount highest scores from the table
+            # if there are ties, we may get a few more
+            scores = [(table[row, col]["score"], (row, col))
+                        for row in range(1, height) for col in range(1, width)]
+            # sorts based on (1) score, (2) position in target
+            scores = sorted(scores, key=lambda s: (s[0], width - s[1][1]), reverse=True)
+
+            # print highest scores, plus low-end ties if needed.
+            if len(scores) <= scoreCount:
+                highScores = scores
+            else:
+                lowest = scores[scoreCount][0]
+                highScores = [score for score in scores if score[0] >= lowest]
+
+            # print the high scores
+            return printScores(highScores, table, query, qcomment, target, tcomment)
+
+        def printScores(high_scores, table, query, qcomment, target, tcomment):
+            """Print matches, possibly in comma-separated values format."""
+            scoreNumber = 1
+
+            # for plotting purposes:
+            start_pos = []   # stores start positions of top alignments on target sequence
+            top_scores = []  # stores scores of top alignments
+
+            output = {}
+
+            for entry in high_scores:
+                # get the score
+                (s, end) = entry
+                # the location (in table) of end of match
+                (row, col) = end
+                (end_row, end_col) = end
+                # the beginning of the match
+                (start_row, start_col) = table[end]["start"]
+
+                # these strings grow to form picture of alignment
+                t_str = ""
+                align_str = ""
+                q_str = ""
+
+                # traverse the table from end to beginning of match,
+                # building a picture of the query, target, and their
+                # relative alignments
+                while table[row, col]["type"] != "begin":
+                    type = table[row, col]["type"]
+                    # based on the type of match, we introduce a match,
+                    # mismatch, or gap.  We assemble (from right to left)
+                    # the picture of the alignment
+                    if type == "match":
+                        (row, col) = (row - 1, col - 1)
+                        t_str = target[col] + t_str
+                        align_str = "<span class=\"green\">|</span>" + align_str
+                        q_str = query[row] + q_str
+                    elif type == "similar":
+                        (row, col) = (row - 1, col - 1)
+                        t_str = target[col] + t_str
+                        align_str = "<span class=\"yellow\">:</span>" + align_str
+                        q_str = query[row] + q_str
+                    elif type == "mismatch":
+                        (row, col) = (row - 1, col - 1)
+                        t_str = target[col] + t_str
+                        align_str = "&nbsp" + align_str
+                        q_str = query[row] + q_str
+                    elif type == "queryGap":
+                        (row, col) = (row, col - 1)
+                        t_str = target[col] + t_str
+                        align_str = "&nbsp" + align_str
+                        q_str = "<span class=\"red\">-</span>" + q_str  # the gap
+                    elif type == "targetGap":
+                        (row, col) = (row - 1, col)
+                        t_str = "<span class=\"red\">-</span>" + t_str  # the gap
+                        align_str = "&nbsp" + align_str
+                        q_str = query[row] + q_str
+
+                # add information to data that will be plotted
+                start_pos.append(start_col + 1)
+                top_scores.append(table[end]["score"])
+
+                match_heading = "Match #{}, score = {:.1f}".format(scoreNumber, table[end]["score"])
+                target_space = gen_spaces(start_col + 1)
+                target_space_end = gen_spaces(end_col)
+                query_space = gen_spaces(start_row + 1)
+                query_space_end = gen_spaces(end_row)
+
+                target_str = target_space + "{}: {} :{}{} {}".format(start_col + 1, t_str, end_col, target_space_end,
+                                                    tcomment)
+                alignment_str = "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp{}".format(align_str)
+                query_str = query_space + "{}: {} :{}{} {}\n".format(start_row + 1, q_str, end_row, query_space_end,
+                                                        qcomment)
+                output[match_heading] = {"target": target_str,
+                                            "alignment": alignment_str,
+                                            "query": query_str}
+                scoreNumber = scoreNumber + 1
+
+            return output
+
+        def gen_spaces(num):
+            space = ""
+            if num < 1000:
+                space += "&nbsp"
+            if num < 100:
+                space += "&nbsp"
+            if num < 10:
+                space += "&nbsp"
+            return space
+
+        res = sw(q, t)
+
+        matches = document['matches']
+        for r in res:
+            match = document.createElement('div')
+            heading = document.createElement('p')
+            heading.innerHTML = r
+            heading.classList.add("heading")
+            target = document.createElement('p')
+            target.innerHTML = res[r]["target"]
+            align = document.createElement('p')
+            align.innerHTML = res[r]["alignment"]
+            query = document.createElement('p')
+            query.innerHTML = res[r]["query"]
+            match.appendChild(heading)
+            match.appendChild(target)
+            match.appendChild(align)
+            match.appendChild(query)
+            matches.appendChild(match)
+    </script>
+</body>
+</html>
