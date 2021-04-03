@@ -9,31 +9,123 @@
     <meta property="og:image" content="img/socimg.png" />
     <link rel="icon" type="image/png" href="fav.png">
     <link rel="stylesheet" type="text/css" href='style.css' />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython.js"></script>
     <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython_stdlib.js"></script>
 </head>
-<body onload="brython()">
+<body onload="brython()" class="green-bg">
+    <div id="spin">
+        <div class="loader"></div>
+    </div>
     <header class="smooth-trans">
+        <a href="https://github.com/catherinesyeh/bind-mi" title="Github" target="_blank">
+            <div id="github" class="smooth-trans">
+                <i class="fa fa-github" aria-hidden="true"></i>
+                <span>Github</span>
+            </div>
+        </a>
         <h1 class="smooth-trans">bind-mi</h1>
         <h3 class="smooth-trans">A miRNA Binding Site Prediction Tool</h3>
+        <p>Enter a query and target string to get a list of predicted miRNA binding sites. Results are generated using a modified Smith-Waterman algorithm.</p>
+        <div id="input" class="smooth-trans">
+            <div class="form-group">
+                <label for="query">Query (miRNA)</label>
+                <input type="text" class="form-control" id="query-field" name="query" placeholder="5' -> 3' DNA" required>
+            </div>
+            <div class="form-group">
+                <label for="Target">Target (3'UTR)</label>
+                <textarea cols="30" rows="4" class="form-control" id="target-field" name="target" placeholder="5' -> 3' DNA" required></textarea>
+            </div>
+            <div class="form-group">
+                <button type="submit" id="submit-button" name="predict" title="Predict">Predict</button>
+            </div>
+        </div>
+        <div id="go-down">
+            <a id="arrow" href="#matches" title="See Results" class="smooth-trans">
+                <i class="fa fa-angle-down" aria-hidden="true"></i>
+            </a>
+            <span id="see-matches">see matches</span>
+        </div>
     </header>
-    <div id="matches" class="smooth-trans"></div>
+    <div id="matches" class="smooth-trans">
+    </div>
     <script type="text/javascript" src="script.js"></script>
     <script type="text/python3">
         from browser import document, window
         import sys
+        import re
 
-        q = "TGAGGTAGTAGGTTGTATAGTT"
-        t = "CGCAGCACAAGCTCAGGACATGGAGGTGCCGGATGCAGGAAGGAGGTGCAGACGGAAGGAGGAGGCT"
+        not_dna = re.compile("[^ATCG]")
+        matches = document['matches']
+        arrow_button = document['go-down']
+        spinner = document['spin']
 
-        t = t.strip()  # remove leading and trailing whitespace
-        t = t.upper()  # make upper case
-        t = t.replace('T', 'U')  # ensure RNA alphabet
+        def get_matches(e):
+            spinner.classList.add("visible")
+            query = document['query-field']
+            q = query.value
+            invalid = False
+            if len(q) == 0:
+                query.value = "Invalid input. Please try again."
+                invalid = True
+            else:
+                q = q.strip()
+                q = q.upper()  # make upper case
+                if re.search(not_dna, q) != None:
+                    query.value = "Invalid input. Please try again."
+                    invalid = True
+                else:
+                    q = q.replace('T', 'U')  # ensure RNA alphabet
+                    q = q[::-1]    # reverse
+            target = document['target-field']
+            t = target.value
+            if len(t) == 0:
+                target.value = "Invalid input. Please try again."
+                invalid = True
+            else:
+                t = t.strip()  # remove leading and trailing whitespace
+                t = t.upper()  # make upper case
+                if re.search(not_dna, t) != None:
+                    target.value = "Invalid input. Please try again."
+                    invalid = True
+                else:
+                    t = t.replace('T', 'U')  # ensure RNA alphabet
 
-        # this is the miRNA
-        q = q.upper()  # make upper case
-        q = q.replace('T', 'U')  # ensure RNA alphabet
-        q = q[::-1]    # reverse
+            if invalid:
+                spinner.classList.remove("visible")
+                return
+
+            matches.innerHTML = ""
+            res = sw(q, t)
+            
+            num = len(res)
+            num_matches = document.createElement('h2')
+            num_matches.innerHTML = "Top " + str(num) + " Matches"
+            matches.appendChild(num_matches)
+
+            for r in res:
+                match = document.createElement('div')
+                heading = document.createElement('p')
+                heading.innerHTML = r
+                heading.classList.add("heading")
+                target = document.createElement('p')
+                target.innerHTML = res[r]["target"]
+                align = document.createElement('p')
+                align.innerHTML = res[r]["alignment"]
+                query = document.createElement('p')
+                query.innerHTML = res[r]["query"]
+                match.appendChild(heading)
+                match.appendChild(target)
+                match.appendChild(align)
+                match.appendChild(query)
+                matches.appendChild(match)
+
+            matches.classList.add("visible")
+            arrow_button.classList.add("visible")
+            spinner.classList.remove("visible")
+            document.body.classList.remove("green-bg")
+
+        document["submit-button"].bind("click", get_matches)
 
         rnaMatch = {'A': 'U', 'C': 'G', 'G': 'CU', 'U': 'AG'}
 
@@ -257,26 +349,6 @@
             if num < 10:
                 space += "&nbsp"
             return space
-
-        res = sw(q, t)
-
-        matches = document['matches']
-        for r in res:
-            match = document.createElement('div')
-            heading = document.createElement('p')
-            heading.innerHTML = r
-            heading.classList.add("heading")
-            target = document.createElement('p')
-            target.innerHTML = res[r]["target"]
-            align = document.createElement('p')
-            align.innerHTML = res[r]["alignment"]
-            query = document.createElement('p')
-            query.innerHTML = res[r]["query"]
-            match.appendChild(heading)
-            match.appendChild(target)
-            match.appendChild(align)
-            match.appendChild(query)
-            matches.appendChild(match)
     </script>
 </body>
 </html>
