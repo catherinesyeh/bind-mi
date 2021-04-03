@@ -251,7 +251,7 @@ textarea {
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
-    padding: calc(20px + 5vw);
+    padding: calc(20px + 3vw) calc(20px + 5vw);
 }
 
 #matches h2 {

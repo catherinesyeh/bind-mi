@@ -17,7 +17,7 @@
     <div id="spin">
         <div class="loader"></div>
     </div>
-    <header class="smooth-trans">
+    <header id="header" class="smooth-trans">
         <a href="https://github.com/catherinesyeh/bind-mi" title="Github" target="_blank">
             <div id="github" class="smooth-trans">
                 <i class="fa fa-github" aria-hidden="true"></i>
@@ -55,12 +55,15 @@
         import sys
         import re
 
+        FIRST_TIME = True
+
         not_dna = re.compile("[^ATCG]")
         matches = document['matches']
         arrow_button = document['go-down']
         spinner = document['spin']
 
         def get_matches(e):
+            global FIRST_TIME
             spinner.classList.add("visible")
             query = document['query-field']
             q = query.value
@@ -95,9 +98,10 @@
                 spinner.classList.remove("visible")
                 return
 
+            matches.classList.remove("visible")
             matches.innerHTML = ""
             res = sw(q, t)
-            
+
             num = len(res)
             num_matches = document.createElement('h2')
             num_matches.innerHTML = "Top " + str(num) + " Matches"
@@ -121,9 +125,13 @@
                 matches.appendChild(match)
 
             matches.classList.add("visible")
-            arrow_button.classList.add("visible")
+
+            if FIRST_TIME:
+                arrow_button.classList.add("visible")
+                document.body.classList.remove("green-bg")
+            
             spinner.classList.remove("visible")
-            document.body.classList.remove("green-bg")
+            FIRST_TIME = False
 
         document["submit-button"].bind("click", get_matches)
 
