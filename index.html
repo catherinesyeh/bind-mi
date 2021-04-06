@@ -107,7 +107,7 @@
                     t = t.replace('T', 'U')  # ensure RNA alphabet
 
             if invalid or (prev_query == q and prev_target == t):
-                return
+                return False
 
             matches.classList.remove("visible")
             matches.innerHTML = ""
@@ -144,6 +144,7 @@
                 document.body.classList.remove("green-bg")
 
             FIRST_TIME = False
+            return True
 
         window.sw = get_matches
 
