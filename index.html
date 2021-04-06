@@ -74,11 +74,9 @@
         not_dna = re.compile("[^ATCG]")
         matches = document['matches']
         arrow_button = document['go-down']
-        #spinner = document['spin']
 
         def get_matches():
             global FIRST_TIME, prev_query, prev_target
-            #spinner.classList.add("visible")
             query = document['query-field']
             q = query.value
             invalid = False
@@ -109,7 +107,6 @@
                     t = t.replace('T', 'U')  # ensure RNA alphabet
 
             if invalid or (prev_query == q and prev_target == t):
-                #spinner.classList.remove("visible")
                 return
 
             matches.classList.remove("visible")
@@ -146,10 +143,8 @@
                 arrow_button.classList.add("visible")
                 document.body.classList.remove("green-bg")
 
-            #spinner.classList.remove("visible")
             FIRST_TIME = False
 
-        #document["submit-button"].bind("click", get_matches)
         window.sw = get_matches
 
         rnaMatch = {'A': 'U', 'C': 'G', 'G': 'CU', 'U': 'AG'}

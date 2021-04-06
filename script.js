@@ -33,6 +33,11 @@ $('#submit-button').click(function () {
     $('#spin').addClass("visible");
     setTimeout(function () {
         sw();
+        $('#see-matches').addClass("active");
         $('#spin').removeClass("visible");
-    }, 1);
+    }, 100);
+});
+
+$('#arrow').hover(function () {
+    $('#see-matches').removeClass("active");
 });

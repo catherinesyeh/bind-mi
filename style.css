@@ -197,6 +197,12 @@ textarea {
     transition: 0.5s;
 }
 
+#see-matches.active {
+    color: white;
+    text-decoration: underline;
+    letter-spacing: 2px;
+}
+
 #go-down {
     opacity: 0;
     visibility: hidden;
