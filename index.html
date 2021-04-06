@@ -17,6 +17,7 @@
     <div id="spin">
         <div class="loader"></div>
     </div>
+    <a href="#" id="back-to-top">Top <i class="fa fa-long-arrow-up" aria-hidden="true"></i></a>
     <header id="header" class="smooth-trans">
         <a href="https://github.com/catherinesyeh/bind-mi" title="Github" target="_blank">
             <div id="github" class="smooth-trans">
@@ -26,15 +27,19 @@
         </a>
         <h1 class="smooth-trans">bind-mi</h1>
         <h3 class="smooth-trans">A miRNA Binding Site Prediction Tool</h3>
-        <p>Enter a query and target string to get a list of predicted miRNA binding sites. Results are generated using a modified Smith-Waterman algorithm.</p>
+        <p>
+            Enter a query and target string to get a list of predicted miRNA binding sites.
+            Try the example below or input your own sequences!
+            Results are generated using a modified Smith-Waterman algorithm.
+        </p>
         <div id="input" class="smooth-trans">
             <div class="form-group">
                 <label for="query">Query (miRNA)</label>
-                <input type="text" class="form-control" id="query-field" name="query" placeholder="5' -> 3' DNA" required>
+                <input type="text" class="form-control" id="query-field" name="query" spellcheck="false" placeholder="5' -> 3' DNA" required>
             </div>
             <div class="form-group">
                 <label for="Target">Target (3'UTR)</label>
-                <textarea cols="30" rows="4" class="form-control" id="target-field" name="target" placeholder="5' -> 3' DNA" required></textarea>
+                <textarea cols="30" rows="4" class="form-control" id="target-field" spellcheck="false" name="target" placeholder="5' -> 3' DNA" required></textarea>
             </div>
             <div class="form-group">
                 <button type="submit" id="submit-button" name="predict" title="Predict">Predict</button>
@@ -56,6 +61,8 @@
         import re
 
         FIRST_TIME = True
+        prev_query = ""
+        prev_target = ""
 
         not_dna = re.compile("[^ATCG]")
         matches = document['matches']
@@ -63,7 +70,7 @@
         spinner = document['spin']
 
         def get_matches(e):
-            global FIRST_TIME
+            global FIRST_TIME, prev_query, prev_target
             spinner.classList.add("visible")
             query = document['query-field']
             q = query.value
@@ -94,7 +101,7 @@
                 else:
                     t = t.replace('T', 'U')  # ensure RNA alphabet
 
-            if invalid:
+            if invalid or (prev_query == q and prev_target == t):
                 spinner.classList.remove("visible")
                 return
 
@@ -125,11 +132,13 @@
                 matches.appendChild(match)
 
             matches.classList.add("visible")
+            prev_query = q
+            prev_target = t
 
             if FIRST_TIME:
                 arrow_button.classList.add("visible")
                 document.body.classList.remove("green-bg")
-            
+
             spinner.classList.remove("visible")
             FIRST_TIME = False
 

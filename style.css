@@ -80,6 +80,35 @@ p {
     font-size: calc(10px + 0.5vw);
 }
 
+#back-to-top {
+    color: var(--text-color);
+    text-decoration: none;
+    opacity: 0;
+    transform: translateY(100%);
+    visibility: hidden;
+    pointer-events: none;
+    position: fixed;
+    bottom: calc(20px + 1vw);
+    right: calc(20px + 1vw);
+    font-size: calc(20px + 1vw);
+    z-index: 9999;
+    transition: 0.5s;
+}
+
+#back-to-top.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+}
+
+#back-to-top:hover {
+    color: var(--col-4);
+    bottom: calc(20px + 1.5vw);
+    transform: scale(1.05);
+    transition: 0.5s;
+}
+
 header {
     position: relative;
     background-color: var(--col-1);
@@ -193,6 +222,10 @@ textarea {
 #arrow:hover {
     opacity: 1;
     color: white;
+}
+
+#arrow:hover + #see-matches {
+    letter-spacing: 2px;
 }
 
 .smooth-trans {
