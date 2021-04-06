@@ -4,8 +4,8 @@
 
 :root {
     --text-color: #1c1b20;
-    --col-0: #e1e6de;
-    --col-1: #CAD2C5;
+    --col-0: #e1e6de; /* 225, 230, 222 */
+    --col-1: #CAD2C5; /* 202, 210, 197 */
     --col-2: #84A98C;
     --col-3: #52796F;
     --col-4: #354F52;
@@ -278,6 +278,39 @@ textarea {
     -webkit-animation: spin 2s linear infinite; /* Safari */
     animation: spin 2s linear infinite;
     transition: 0.5s;
+}
+
+#key {
+    position: fixed;
+    transform: translateX(100%);
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    right: 0;
+    top: calc(20px + 1vw);
+    padding: calc(10px + 1vw);
+    background-color: rgba(225, 230, 222, 0.7);
+    width: auto;
+    display: inline-block;
+    transition: 0.5s;
+}
+
+#key.active {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+}
+
+#key h5 {
+    font-family: monospace;
+    font-size: calc(12px + 0.2vw);
+    font-weight: 400;
+}
+
+#key span {
+    margin-right: 15px;
+    font-weight: 600;
 }
 
 #matches {
