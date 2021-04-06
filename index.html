@@ -10,6 +10,7 @@
     <link rel="icon" type="image/png" href="fav.png">
     <link rel="stylesheet" type="text/css" href='style.css' />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython.js"></script>
     <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython_stdlib.js"></script>
 </head>
@@ -73,11 +74,11 @@
         not_dna = re.compile("[^ATCG]")
         matches = document['matches']
         arrow_button = document['go-down']
-        spinner = document['spin']
+        #spinner = document['spin']
 
-        def get_matches(e):
+        def get_matches():
             global FIRST_TIME, prev_query, prev_target
-            spinner.classList.add("visible")
+            #spinner.classList.add("visible")
             query = document['query-field']
             q = query.value
             invalid = False
@@ -108,7 +109,7 @@
                     t = t.replace('T', 'U')  # ensure RNA alphabet
 
             if invalid or (prev_query == q and prev_target == t):
-                spinner.classList.remove("visible")
+                #spinner.classList.remove("visible")
                 return
 
             matches.classList.remove("visible")
@@ -145,10 +146,11 @@
                 arrow_button.classList.add("visible")
                 document.body.classList.remove("green-bg")
 
-            spinner.classList.remove("visible")
+            #spinner.classList.remove("visible")
             FIRST_TIME = False
 
-        document["submit-button"].bind("click", get_matches)
+        #document["submit-button"].bind("click", get_matches)
+        window.sw = get_matches
 
         rnaMatch = {'A': 'U', 'C': 'G', 'G': 'CU', 'U': 'AG'}
 
