@@ -158,7 +158,7 @@
                         "seedWeight": 1.5,
                         "skipLength": 15,    # first n nts in target string should be skipped
                         "centerRange": 0.5,    # middle (n*100)% of nts on target string will be penalized
-                        "penalty": 0.5,
+                        "penalty": 1.5,
                         "auBonus": 0.1,
                         "pairingBonus": 0.1}
 
@@ -192,10 +192,6 @@
             penalty = scoreValue["penalty"]
             auBonus = scoreValue["auBonus"]
             pairingBonus = scoreValue["pairingBonus"]
-
-            # find middle portion of target string for penalty adjustments
-            left_bound = (int)((centerRange / 2) * width)  # e.g., 25th percentile if centerRange = 50%
-            right_bound = (int)(width - left_bound)    # e.g., 75th percentile if centerRange = 50%
 
             # fill out the Smith Waterman matrix with values
             for row in range(1, height):
@@ -234,10 +230,6 @@
                         if newScore["type"] == "match":
                             newScore["score"] += pairingBonus
 
-                    # penalize if in skip region or near center of UTR
-                    if col <= skipLength or col in range(left_bound, right_bound):
-                        newScore["score"] -= penalty
-
                     # two other ways these strings may be aligned:
                     # current query character is dropped (a targetGap)
                     # or the current target character is dropped (a queryGap)
@@ -268,16 +260,31 @@
                                 for ntAway in range(1, 11):  # look from 1 to 10 nt away
                                     if (col - 1) - ntAway >= 0:  # make sure you actually can look "to the left" in mRNA
                                         if target[(col - 1) - ntAway] == "A" or "U":
-                                            newScore["score"] += (auBonus * (1 / (ntAway**2)))
+                                            newScore["score"] += (auBonus / (ntAway**2))
 
                             if row == max(seedRange):  # at end of seed
                                 for ntAway in range(1, 11):  # again, look from 1 to 10 nt away
                                     if (col - 1) + ntAway < len(target):  # make sure you actually can look "to the right" in mRNA
                                         if target[(col - 1) + ntAway] == "A" or "U":
-                                            newScore["score"] += (auBonus * (1 / (ntAway**2)))
+                                            newScore["score"] += (auBonus / (ntAway**2))
 
                     # write the entry in the table
                     table[row, col] = newScore
+
+            # IF you have a score adjustment pass, put that here, making adjustments
+            # to table[row,col]["score"].
+            # aka. want to weight mismatch/match more heavily in another part of the UTR.
+
+            # !!! find middle portion of target string for penalty adjustments
+            left_bound = (int)((centerRange / 2) * width)  # e.g., 25th percentile if centerRange = 50%
+            right_bound = (int)(width - left_bound)    # e.g., 75th percentile if centerRange = 50%
+
+            for row in range(1, height):
+                for col in range(1, width):
+                    # !!! penalize score if we're in the skip region of target string (e.g., first 15 nts)
+                    # !!! or near center of UTR (binding sites are more likely found at ends)
+                    if col <= skipLength or col in range(left_bound, right_bound):
+                        table[row, col]["score"] -= penalty
 
             # Finally, compute the top scoreCount highest scores from the table
             # if there are ties, we may get a few more
