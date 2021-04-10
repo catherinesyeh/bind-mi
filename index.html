@@ -160,7 +160,8 @@
                         "centerRange": 0.5,    # middle (n*100)% of nts on target string will be penalized
                         "penalty": 1.5,
                         "auBonus": 0.1,
-                        "pairingBonus": 0.1}
+                        "pairingBonus": 0.1,
+                        "nearBonus": 0.8}
 
         def sw(query, target, scoreCount=10,
             match=rnaMatch, scoreValue=rnaValues,
@@ -192,6 +193,7 @@
             penalty = scoreValue["penalty"]
             auBonus = scoreValue["auBonus"]
             pairingBonus = scoreValue["pairingBonus"]
+            nearBonus = scoreValue["nearBonus"]
 
             # fill out the Smith Waterman matrix with values
             for row in range(1, height):
@@ -254,7 +256,7 @@
                         newScore = {"score": 0,
                                     "type": "begin",
                                     "start": (row, col)}
-                    else:   # if score is > 0, and type is not (the kind of gap we talked about), then add AU bonus here!
+                    else:   # if score is > 0, and type is not query gap, then add AU bonus here!
                         if newScore["type"] != "queryGap":
                             if row == min(seedRange):  # at start of seed
                                 for ntAway in range(1, 11):  # look from 1 to 10 nt away
@@ -267,6 +269,20 @@
                                     if (col - 1) + ntAway < len(target):  # make sure you actually can look "to the right" in mRNA
                                         if target[(col - 1) + ntAway] == "A" or "U":
                                             newScore["score"] += (auBonus / (ntAway**2))
+                            # the first loop (below) adds a bonus if there is another match within 8-40nt BEFORE the site in question
+                            # Aka it looks within 8-40nt after a binding site for another binding site
+                            if row == 20:  # at start of seed
+                                for ntAway in range(8, 40):
+                                    # look from 8 o 40 nt away
+                                    if (col - 1) - ntAway >= 0:  # make sure you actually can look "to the left" in mRNA
+                                        if table[row - 1, (col - 1) - ntAway]['score'] >= 16:
+                                            newScore["score"] += (nearBonus)
+                                    # the second loop (below) adds a bonus if there is another match within 8-40nt AFTER the site in question
+                                    # Aka it looks within 8-40nt after a binding site for another binding site
+                                    # look from 8 o 40 nt away
+                                    if len(target) - ((col - 1) + ntAway) >= 0:  # make sure you actually can look "to the right" in UTR
+                                        if table[row - 1, (col - 1) + ntAway]['score'] >= 16:
+                                            newScore["score"] += (nearBonus)
 
                     # write the entry in the table
                     table[row, col] = newScore
@@ -275,14 +291,14 @@
             # to table[row,col]["score"].
             # aka. want to weight mismatch/match more heavily in another part of the UTR.
 
-            # !!! find middle portion of target string for penalty adjustments
+            # find middle portion of target string for penalty adjustments
             left_bound = (int)((centerRange / 2) * width)  # e.g., 25th percentile if centerRange = 50%
             right_bound = (int)(width - left_bound)    # e.g., 75th percentile if centerRange = 50%
 
             for row in range(1, height):
                 for col in range(1, width):
-                    # !!! penalize score if we're in the skip region of target string (e.g., first 15 nts)
-                    # !!! or near center of UTR (binding sites are more likely found at ends)
+                    # penalize score if we're in the skip region of target string (e.g., first 15 nts)
+                    # or near center of UTR (binding sites are more likely found at ends)
                     if col <= skipLength or col in range(left_bound, right_bound):
                         table[row, col]["score"] -= penalty
 
