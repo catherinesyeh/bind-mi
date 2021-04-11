@@ -151,17 +151,17 @@
         rnaMatch = {'A': 'U', 'C': 'G', 'G': 'CU', 'U': 'AG'}
 
         rnaValues = {"match": 1.0,
-                        "targetGap": -0.5, "queryGap": -0.5,
-                        "mismatch": -1.0,
-                        "similar": 0.8,
-                        "seedRange": range(2, 8),  # nt 2-7 in query string should match
-                        "seedWeight": 1.5,
-                        "skipLength": 15,    # first n nts in target string should be skipped
-                        "centerRange": 0.5,    # middle (n*100)% of nts on target string will be penalized
-                        "penalty": 1.5,
-                        "auBonus": 0.1,
-                        "pairingBonus": 0.1,
-                        "nearBonus": 0.8}
+                     "targetGap": -0.5, "queryGap": -0.7,
+                     "mismatch": -1.0,
+                     "similar": 0.8,
+                     "seedRange": range(2, 8),  # nt 2-7 in query string should match
+                     "seedWeight": 1.6,
+                     "skipLength": 15,    # first n nts in target string should be skipped
+                     "centerRange": 0.5,    # middle (n*100)% of nts on target string will be penalized
+                     "penalty": 1.5,    # will subtract from score if in skip/center region of UTR
+                     "auBonus": 0.1,
+                     "pairingBonus": 0.2,
+                     "nearBonus": 0.8}  # will add bonus if two matches are within 8-40nt of each other
 
         def sw(query, target, scoreCount=10,
             match=rnaMatch, scoreValue=rnaValues,
