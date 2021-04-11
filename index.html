@@ -274,14 +274,14 @@
                             if row == height - min(seedRange):  # at start of seed
                                 for ntAway in range(8, 40):
                                     # look from 8 o 40 nt away
-                                    if (col - 1) - ntAway >= 0:  # make sure you actually can look "to the left" in mRNA
-                                        if table[row - 1, (col - 1) - ntAway]['score'] >= 16:
+                                    if col - ntAway >= 0:  # make sure you actually can look "to the left" in mRNA
+                                        if table[row - 1, col - ntAway]['score'] >= 16:
                                             newScore["score"] += nearBonus
                                     # the second loop (below) adds a bonus if there is another match within 8-40nt AFTER the site in question
                                     # Aka it looks within 8-40nt after a binding site for another binding site
                                     # look from 8 o 40 nt away
-                                    if len(target) - ((col - 1) + ntAway) >= 0:  # make sure you actually can look "to the right" in UTR
-                                        if table[row - 1, (col - 1) + ntAway]['score'] >= 16:
+                                    if len(target) - (col + ntAway) >= 0:  # make sure you actually can look "to the right" in UTR
+                                        if table[row - 1, col + ntAway]['score'] >= 16:
                                             newScore["score"] += nearBonus
 
                     # write the entry in the table
