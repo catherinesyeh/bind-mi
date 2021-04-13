@@ -13,6 +13,7 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython.js"></script>
     <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython_stdlib.js"></script>
+    <script src='https://unpkg.com/simple-statistics@7.7.0/dist/simple-statistics.min.js'></script>
 </head>
 <body onload="brython()" class="green-bg">
     <div id="spin">
@@ -59,9 +60,23 @@
         <h5><span class="green">|</span>match</h5>
         <h5><span class="yellow">:</span>similar</h5>
     </div>
-    <div id="matches" class="smooth-trans">
+    <div id="results">
+        <h2>Key Statistics</h2>
+        <div id="stats" class="smooth-trans">
+            <div>
+                <p class="heading">Target Start Position</p>
+                <div id="pos-stats">
+                </div>
+            </div>
+            <div>
+                <p class="heading">Alignment Score</p>
+                <div id="align-stats">
+                </div>
+            </div>
+        </div>
+        <div id="matches" class="smooth-trans"></div>
     </div>
-    <script type="text/javascript" src="script.js" onload="brython()"></script>
+    <script type="text/javascript" src="script.js"></script>
     <script type="text/python3">
         from browser import document, window
         import sys
@@ -73,6 +88,7 @@
 
         not_dna = re.compile("[^ATCG]")
         matches = document['matches']
+        results = document['results']
         arrow_button = document['go-down']
 
         def get_matches():
@@ -107,11 +123,14 @@
                     t = t.replace('T', 'U')  # ensure RNA alphabet
 
             if invalid or (prev_query == q and prev_target == t):
-                return False
+                return [False, None, None]
 
-            matches.classList.remove("visible")
+            results.classList.remove("visible")
             matches.innerHTML = ""
-            res = sw(q, t)
+            res_all = sw(q, t)
+            res = res_all[0]
+            pos = res_all[1]
+            scores = res_all[2]
 
             num = len(res)
             num_matches = document.createElement('h2')
@@ -135,7 +154,7 @@
                 match.appendChild(query)
                 matches.appendChild(match)
 
-            matches.classList.add("visible")
+            results.classList.add("visible")
             prev_query = q
             prev_target = t
 
@@ -144,7 +163,7 @@
                 document.body.classList.remove("green-bg")
 
             FIRST_TIME = False
-            return True
+            return [True, pos, scores]
 
         window.sw = get_matches
 
@@ -396,8 +415,8 @@
                                             "alignment": alignment_str,
                                             "query": query_str}
                 scoreNumber = scoreNumber + 1
-
-            return output
+            
+            return [output, start_pos, top_scores]
 
         def gen_spaces(num):
             space = ""
