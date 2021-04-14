@@ -14,6 +14,7 @@
     <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython.js"></script>
     <script src="https://raw.githack.com/brython-dev/brython/master/www/src/brython_stdlib.js"></script>
     <script src='https://unpkg.com/simple-statistics@7.7.0/dist/simple-statistics.min.js'></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body onload="brython()" class="green-bg">
     <div id="spin">
@@ -48,7 +49,7 @@
             </div>
         </div>
         <div id="go-down">
-            <a id="arrow" href="#matches" title="See Results" class="smooth-trans">
+            <a id="arrow" href="#results" title="See Results" class="smooth-trans">
                 <i class="fa fa-angle-down" aria-hidden="true"></i>
             </a>
             <span id="see-matches">see matches</span>
@@ -61,16 +62,19 @@
         <h5><span class="yellow">:</span>similar</h5>
     </div>
     <div id="results">
-        <h2>Key Statistics</h2>
-        <div id="stats" class="smooth-trans">
-            <div>
-                <p class="heading">Target Start Position</p>
-                <div id="pos-stats">
+        <div id="graph" class="smooth-trans"></div>
+        <div id="stats-container">
+            <h3 class="smooth-trans">Key Statistics</h3>
+            <div id="stats" class="smooth-trans">
+                <div>
+                    <p class="green heading">Target Start Position</p>
+                    <div id="pos-stats">
+                    </div>
                 </div>
-            </div>
-            <div>
-                <p class="heading">Alignment Score</p>
-                <div id="align-stats">
+                <div>
+                    <p class="green heading">Alignment Score</p>
+                    <div id="align-stats">
+                    </div>
                 </div>
             </div>
         </div>
@@ -135,6 +139,7 @@
             num = len(res)
             num_matches = document.createElement('h2')
             num_matches.innerHTML = "Top " + str(num) + " Matches"
+            num_matches.classList.add("smooth-trans")
             matches.appendChild(num_matches)
 
             for r in res:

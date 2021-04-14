@@ -6,9 +6,9 @@
     --text-color: #1c1b20;
     --col-0: #e1e6de; /* 225, 230, 222 */
     --col-1: #CAD2C5; /* 202, 210, 197 */
-    --col-2: #84A98C;
-    --col-3: #52796F;
-    --col-4: #354F52;
+    --col-2: #84A98C; /* 132, 169, 140 */
+    --col-3: #52796F; /* 82, 121, 111 */
+    --col-4: #354F52; /* 53, 79, 82 */
     --col-5: #2F3E46;
     --red: #ca5638;
     --yellow: #f8b77a;
@@ -288,6 +288,7 @@ textarea {
 
 #key {
     position: fixed;
+    z-index: 999;
     transform: translateX(100%);
     opacity: 0;
     pointer-events: none;
@@ -321,7 +322,7 @@ textarea {
 
 #results {
     column-count: 2;
-    column-gap: 20px;
+    column-gap: 50px;
     padding: calc(20px + 3vw) calc(20px + 5vw);
     opacity: 0;
     visibility: hidden;
@@ -338,10 +339,23 @@ textarea {
     padding-bottom: 10px;
 }
 
+#results h3 {
+    padding-bottom: 5px;
+}
+
+#stats-container {
+    padding: 20px 30px;
+    border: 3px solid var(--col-1);
+    margin-bottom: 20px;
+}
+
 #stats {
     column-gap: 20px;
     column-count: 2;
-    padding-bottom: 20px;
+}
+
+#matches {
+    display: inline-block;
 }
 
 #matches div, #stats div {
@@ -380,4 +394,21 @@ textarea {
     visibility: visible !important;
     pointer-events: auto !important;
     transition: 0.5s;
+}
+
+/* PLOTLY OVERRIDE */
+.cls-1 {
+    fill: var(--col-4) !important;
+}
+
+.cls-2 {
+    fill: var(--col-2) !important;
+}
+
+.js-plotly-plot .plotly [data-title]::after {
+    background-color: var(--col-5) !important;
+}
+
+.js-plotly-plot .plotly [data-title]::before {
+    border-color: transparent transparent var(--col-5) !important;
 }

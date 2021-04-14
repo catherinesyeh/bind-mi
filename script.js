@@ -61,6 +61,39 @@ function printStats(data, key) {
     addStat(output, "sd", sd);
 }
 
+function plotGraph(x) {
+    var trace = {
+        x: x,
+        type: 'histogram',
+        nbinsx: 20,
+        marker: {
+            color: "rgba(53, 79, 82, 0.7)",
+            line: {
+                color: "rgba(53, 79, 82, 1)",
+                width: 1
+            }
+        },
+        opacity: 0.6 
+    };
+    var title = "Distribution of Target Start Positions (n = " + x.length + ")";
+    var layout = {
+        title: "<b>" + title + "</b>",
+        font: {
+            family: 'Poppins',
+            color: '#1c1b20'
+        },
+        yaxis: {
+            title: '<b>Frequency</b>',
+        },
+        xaxis: {
+            title: '<b>Target Start Position</b>',
+        }
+    };
+    var config = { responsive: true };
+    var data = [trace];
+    Plotly.newPlot('graph', data, layout, config);
+}
+
 $('#submit-button').click(function () {
     $('#spin').addClass("visible");
     setTimeout(function () {
@@ -71,6 +104,7 @@ $('#submit-button').click(function () {
             var scores = res_all[2];
             printStats(pos, "p");
             printStats(scores, "s");
+            plotGraph(pos);
             $('#see-matches').addClass("active");
         }
         $('#spin').removeClass("visible");
