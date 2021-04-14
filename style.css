@@ -343,6 +343,46 @@ textarea {
     padding-bottom: 5px;
 }
 
+#switch {
+    text-align: center;
+}
+
+.toggle {
+    cursor: pointer;
+    border: 3px solid var(--text-color);
+    opacity: 0.5;
+    outline: none;
+    border-radius: calc(16px + 1vw) 0 0 calc(16px + 1vw);
+    font-family: monospace;
+    background-color: transparent;
+    padding: calc(4px + 0.5vw) calc(8px + 1vw);
+    transition: 0.5s;
+}
+
+.toggle:hover {
+    border-color: var(--col-4);
+    color:  var(--col-4);
+    opacity: 0.8;
+}
+
+.toggle.active {
+    background-color: var(--col-4);
+    border-color: var(--col-4);
+    color: white;
+    opacity: 1;
+    pointer-events: none;
+}
+
+.toggle.right {
+    border-radius: 0 calc(16px + 1vw) calc(16px + 1vw) 0;
+}
+
+#graph {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
 #stats-container {
     padding: 20px 30px;
     border: 3px solid var(--col-1);
@@ -411,4 +451,8 @@ textarea {
 
 .js-plotly-plot .plotly [data-title]::before {
     border-color: transparent transparent var(--col-5) !important;
+}
+
+.modebar-container {
+    top: 65px !important;
 }

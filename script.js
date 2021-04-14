@@ -5,6 +5,10 @@ var header = document.getElementById("header");
 var topButton = document.getElementById("back-to-top");
 var legend = document.getElementById("key");
 
+// for plotting
+var pos = []
+var scores = []
+
 window.addEventListener("scroll", function () {
     changeOpacity(header);
     backToTop();
@@ -61,9 +65,12 @@ function printStats(data, key) {
     addStat(output, "sd", sd);
 }
 
-function plotGraph(x) {
+var graph = document.getElementById("graph");
+
+function plotHist() {
+    graph.innerHTML = "";
     var trace = {
-        x: x,
+        x: pos,
         type: 'histogram',
         nbinsx: 20,
         marker: {
@@ -75,7 +82,7 @@ function plotGraph(x) {
         },
         opacity: 0.6 
     };
-    var title = "Distribution of Target Start Positions (n = " + x.length + ")";
+    var title = "Distribution of Target Start Positions (n = " + pos.length + ")";
     var layout = {
         title: "<b>" + title + "</b>",
         font: {
@@ -94,17 +101,58 @@ function plotGraph(x) {
     Plotly.newPlot('graph', data, layout, config);
 }
 
+function plotScatter() {
+    graph.innerHTML = "";
+    y = []
+    text = []
+    // round to 1 decimal place
+    for (var i = 0; i < scores.length; i++) {
+        y.push(Math.round(scores[i] * 10) / 10);
+        text.push("Match #" + (i + 1));
+    }
+    var trace = {
+        x: pos,
+        y: y,
+        mode: 'markers',
+        type: 'scatter',
+        marker: {
+            color: "rgba(53, 79, 82, 0.7)",
+        },
+        text: text
+    };
+    var title = "Target Start Position v.s. Score of Local <br>SW Alignments (n = " + pos.length + ")";
+    var layout = {
+        title: "<b>" + title + "</b>",
+        font: {
+            family: 'Poppins',
+            color: '#1c1b20'
+        },
+        yaxis: {
+            title: '<b>Alignment Score</b>',
+        },
+        xaxis: {
+            title: '<b>Target Start Position</b>',
+        },
+        'hovermode': 'closest'
+    };
+    var config = { responsive: true };
+    var data = [trace];
+    Plotly.newPlot('graph', data, layout, config);
+}
+
 $('#submit-button').click(function () {
     $('#spin').addClass("visible");
     setTimeout(function () {
         var res_all = sw();
         var res = res_all[0];
         if (res) {
-            var pos = res_all[1];
-            var scores = res_all[2];
+            $('#graph').removeClass("visible");
+            pos = res_all[1];
+            scores = res_all[2];
             printStats(pos, "p");
             printStats(scores, "s");
-            plotGraph(pos);
+            plotHist();
+            $('#graph').addClass("visible");
             $('#see-matches').addClass("active");
         }
         $('#spin').removeClass("visible");
@@ -113,4 +161,36 @@ $('#submit-button').click(function () {
 
 $('#arrow').hover(function () {
     $('#see-matches').removeClass("active");
+});
+
+var style_str = "position: absolute; right: 0px; width: 100%;"
+function moveModebar(move) {
+    var bar = document.getElementsByClassName("modebar-container")[0];
+    if (move) {
+        bar.setAttribute('style', style_str + 'top: 80px !important');
+    } else {
+        bar.setAttribute('style', style_str + 'top: 65px !important');
+    }
+}
+
+$('#scatter-button').click(function () {
+    $('#graph').removeClass("visible");
+    setTimeout(function () {
+        plotScatter();
+        moveModebar(true);
+    }, 100);
+    $('#scatter-button').toggleClass("active");
+    $('#hist-button').toggleClass("active");
+    $('#graph').addClass("visible");
+});
+
+$('#hist-button').click(function () {
+    $('#graph').removeClass("visible");
+    setTimeout(function () {
+        plotHist();
+        moveModebar(false);
+    }, 100);
+    $('#scatter-button').toggleClass("active");
+    $('#hist-button').toggleClass("active");
+    $('#graph').addClass("visible");
 });
