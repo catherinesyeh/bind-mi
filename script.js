@@ -67,7 +67,7 @@ function printStats(data, key) {
 
 var graph = document.getElementById("graph");
 
-function plotHist() {
+function plotHist() { // histogram
     graph.innerHTML = "";
     var trace = {
         x: pos,
@@ -101,7 +101,7 @@ function plotHist() {
     Plotly.newPlot('graph', data, layout, config);
 }
 
-function plotScatter() {
+function plotScatter() { // scatterplot
     graph.innerHTML = "";
     y = []
     text = []
@@ -140,15 +140,56 @@ function plotScatter() {
     Plotly.newPlot('graph', data, layout, config);
 }
 
+var results = document.getElementById("results");
+var matches = document.getElementById("matches");
+
+function printOutput(res) {
+    results.classList.remove("visible");
+    matches.innerHTML = "";
+
+    var num = Object.keys(res).length;
+    var num_matches = document.createElement('h2');
+    num_matches.innerHTML = "Top " + num + " Matches";
+    num_matches.classList.add("smooth-trans");
+    matches.appendChild(num_matches);
+
+    for (var r in res) {
+        var entry = res[r][0].$string_dict;
+
+        var match = document.createElement('div');
+        var heading = document.createElement('p');
+        heading.innerHTML = r;
+        heading.classList.add("heading");
+
+        var target = document.createElement('p');
+        target.innerHTML = entry["target"][0];
+        var align = document.createElement('p');
+        align.innerHTML = entry["alignment"][0];
+        var query = document.createElement('p');
+        query.innerHTML = entry["query"][0];
+        match.appendChild(heading);
+        match.appendChild(target);
+        match.appendChild(align);
+        match.appendChild(query);
+        matches.appendChild(match);
+    }
+
+    results.classList.add("visible");
+}
+
+// run the algorithm!
 $('#submit-button').click(function () {
     $('#spin').addClass("visible");
     setTimeout(function () {
         var res_all = sw();
-        var res = res_all[0];
-        if (res) {
+        var success = res_all[0];
+        if (success) {
             $('#graph').removeClass("visible");
-            pos = res_all[1];
-            scores = res_all[2];
+            output = res_all[1];
+            res = output[0].$string_dict;
+            printOutput(res);
+            pos = output[1];
+            scores = output[2];
             printStats(pos, "p");
             printStats(scores, "s");
             plotHist();
@@ -175,6 +216,7 @@ function moveModebar(move) {
     }
 }
 
+// change graphs
 $('#scatter-button').click(function () {
     $('#graph').removeClass("visible");
     setTimeout(function () {
@@ -195,4 +237,9 @@ $('#hist-button').click(function () {
     $('#scatter-button').toggleClass("active");
     $('#hist-button').toggleClass("active");
     $('#graph').addClass("visible");
+});
+
+// resize graph if window size changes
+$(window).resize(function () {
+    Plotly.relayout('graph', {});
 });

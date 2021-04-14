@@ -95,8 +95,6 @@
         prev_target = ""
 
         not_dna = re.compile("[^ATCG]")
-        matches = document['matches']
-        results = document['results']
         arrow_button = document['go-down']
 
         def get_matches():
@@ -131,39 +129,10 @@
                     t = t.replace('T', 'U')  # ensure RNA alphabet
 
             if invalid or (prev_query == q and prev_target == t):
-                return [False, None, None]
+                return [False, None]
 
-            results.classList.remove("visible")
-            matches.innerHTML = ""
             res_all = sw(q, t)
-            res = res_all[0]
-            pos = res_all[1]
-            scores = res_all[2]
 
-            num = len(res)
-            num_matches = document.createElement('h2')
-            num_matches.innerHTML = "Top " + str(num) + " Matches"
-            num_matches.classList.add("smooth-trans")
-            matches.appendChild(num_matches)
-
-            for r in res:
-                match = document.createElement('div')
-                heading = document.createElement('p')
-                heading.innerHTML = r
-                heading.classList.add("heading")
-                target = document.createElement('p')
-                target.innerHTML = res[r]["target"]
-                align = document.createElement('p')
-                align.innerHTML = res[r]["alignment"]
-                query = document.createElement('p')
-                query.innerHTML = res[r]["query"]
-                match.appendChild(heading)
-                match.appendChild(target)
-                match.appendChild(align)
-                match.appendChild(query)
-                matches.appendChild(match)
-
-            results.classList.add("visible")
             prev_query = q
             prev_target = t
 
@@ -172,7 +141,7 @@
                 document.body.classList.remove("green-bg")
 
             FIRST_TIME = False
-            return [True, pos, scores]
+            return [True, res_all]
 
         window.sw = get_matches
 
