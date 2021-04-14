@@ -180,6 +180,9 @@ function printOutput(res) {
 // run the algorithm!
 $('#submit-button').click(function () {
     $('#spin').addClass("visible");
+    if (typeof sw != 'function') {
+        brython(); // initialize if function not defined yet
+    }
     setTimeout(function () {
         var res_all = sw();
         var success = res_all[0];
