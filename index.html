@@ -387,7 +387,7 @@
                 target_str = target_space + "{}: {} :{}{} {}".format(start_col + 1, t_str, end_col, target_space_end,
                                                     tcomment)
                 alignment_str = "&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp{}".format(align_str)
-                query_str = query_space + "{}: {} :{}{} {}\n".format(start_row + 1, q_str, end_row, query_space_end,
+                query_str = query_space_end + "{}: {} :{}{} {}\n".format(end_row, q_str, start_row + 1, query_space,
                                                         qcomment)
                 output[match_heading] = {"target": target_str,
                                             "alignment": alignment_str,
