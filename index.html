@@ -107,11 +107,14 @@
                 invalid = True
             else:
                 q = q.strip()
+                q = "".join(q.split())
                 q = q.upper()  # make upper case
                 if re.search(not_dna, q) != None:
                     query.value = "Invalid input. Please try again."
                     invalid = True
                 else:
+                    if q != query.value: # replace form field if inconsistent
+                        query.value = q
                     q = q.replace('T', 'U')  # ensure RNA alphabet
                     q = q[::-1]    # reverse
             target = document['target-field']
@@ -121,11 +124,14 @@
                 invalid = True
             else:
                 t = t.strip()  # remove leading and trailing whitespace
+                t = "".join(t.split())
                 t = t.upper()  # make upper case
                 if re.search(not_dna, t) != None:
                     target.value = "Invalid input. Please try again."
                     invalid = True
                 else:
+                    if t != target.value: # replace form field if inconsistent
+                        target.value = t
                     t = t.replace('T', 'U')  # ensure RNA alphabet
 
             if invalid or (prev_query == q and prev_target == t):
@@ -393,7 +399,7 @@
                                             "alignment": alignment_str,
                                             "query": query_str}
                 scoreNumber = scoreNumber + 1
-            
+
             return [output, start_pos, top_scores]
 
         def gen_spaces(num):
