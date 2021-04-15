@@ -1,4 +1,6 @@
-brython(); // initialize again just in case
+if (typeof window.sw != 'function') {
+    brython(); // initialize if function not defined yet
+}
 
 var header = document.getElementById("header");
 
@@ -180,9 +182,6 @@ function printOutput(res) {
 // run the algorithm!
 $('#submit-button').click(function () {
     $('#spin').addClass("visible");
-    if (typeof window.sw != 'function') {
-        brython(); // initialize if function not defined yet
-    }
     setTimeout(function () {
         var res_all = window.sw();
         var success = res_all[0];
