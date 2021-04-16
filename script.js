@@ -1,5 +1,8 @@
-if (typeof window.sw != 'function') {
-    brython(); // initialize if function not defined yet
+function checkBrython() {
+    if (typeof window.sw != 'function') {
+        brython(); // initialize if function not defined yet
+    }
+
 }
 
 var header = document.getElementById("header");
@@ -245,3 +248,5 @@ $('#hist-button').click(function () {
 $(window).resize(function () {
     Plotly.relayout('graph', {});
 });
+
+checkBrython(); // run once for good measure
